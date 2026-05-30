@@ -5,19 +5,22 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { Link } from 'react-router-dom';
-
+import { useLocation } from 'react-router-dom';
 export default function NavBar() {
+const location = useLocation()
+
+  const showSearch = location.pathname ==='/'
+  
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-           <Link to='/'>LiveEvents</Link> 
+    <Box >
+      <AppBar position="static" >
+        <Toolbar sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          <Typography variant="h6" component="div" >
+           <Link to='/' style={{textDecoration: 'none', color: 'white'}}>LiveEvents</Link> 
           </Typography>
-          <Box sx={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap:'200px'}}>
-          <TextField id="outlined-basic" label="Outlined" variant="outlined" sx={{ backgroundColor: 'white'  }}/>
-          <Button color="inherit">Create Event</Button>
-          </Box>
+          {showSearch && <TextField id="outlined-basic" placeholder='Search' variant="outlined" sx={{ backgroundColor: 'white', width: '30%'}}/>}
+          <Button color="inherit" sx={{backgroundColor: 'grey'}}><Link  to='/create' style={{textDecoration: 'none', color: 'white'}}>Create Event</Link></Button>
+          
         </Toolbar>
       </AppBar>
     </Box>
