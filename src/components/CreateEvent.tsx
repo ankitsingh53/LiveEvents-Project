@@ -4,21 +4,22 @@ import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { NameContext } from "./Home";
 import z from "zod";
+import { toast } from "react-toastify";
 
 interface GetFormData {
-   name: String;
-    summary: String;
-    date: String;
-    start_time: String;
-    end_time: String;
+  name: String;
+  summary: String;
+  date: String;
+  start_time: String;
+  end_time: String;
 }
 
 interface FormErrors {
-   name?: String;
-    summary?: String;
-    date?: String;
-    start_time?: String;
-    end_time?: String;
+  name?: String;
+  summary?: String;
+  date?: String;
+  start_time?: String;
+  end_time?: String;
 }
 
 const schema = z.object({
@@ -36,7 +37,6 @@ const CreateEvent = () => {
   const [errors, setErrors] = useState({});
   const [err, setErr] = useState<String>("");
   const [useLibrary, setUseLibrary] = useState<Boolean>(false);
-  const [success, setSuccess] = useState<Boolean>(false);
   const [formData, setFormData] = useState<GetFormData>({
     name: "",
     summary: "",
@@ -94,7 +94,7 @@ const CreateEvent = () => {
     return true;
   };
 
-  const changeToUtc = (date:String, time:String) => {
+  const changeToUtc = (date: String, time: String) => {
     return new Date(`${date}T${time}`).toISOString().replace(".000Z", "Z");
   };
 
@@ -130,10 +130,11 @@ const CreateEvent = () => {
           }),
         },
       );
-
-      if (result.ok) {
         await fetchEvent();
-        setSuccess(true);
+        navigate('/')
+        toast.success("Event Created Successfully", {
+          autoClose: 1000,
+        });
         setFormData({
           name: "",
           summary: "",
@@ -141,28 +142,19 @@ const CreateEvent = () => {
           start_time: "",
           end_time: "",
         });
-      }
       const data = await result.json();
       console.log("Created Event:", data);
     } catch (error) {
-      if(error instanceof Error){
+      if (error instanceof Error) {
         setErr(error.message);
-      }else {
-        setErr("Something went wrong")
-      }     
+      } else {
+        setErr("Something went wrong");
+      }
     }
   };
 
   if (err) {
     return <h1>Server Error: ${err}</h1>;
-  }
-   if(success){
-    return (
-      <>
-      <h1>Event Created Successfully</h1>
-      <button onClick={()=>navigate('/')}>Go To Home page</button>
-      </>
-    )
   }
 
   return (

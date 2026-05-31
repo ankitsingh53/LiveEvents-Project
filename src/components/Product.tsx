@@ -4,6 +4,9 @@ import { NameContext } from "./Home";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Loader from "./Loader";
 
 const API_KEY:String = import.meta.env.VITE_API_KEY;
 
@@ -21,16 +24,23 @@ const Product = () => {
             "Content-Type": "application/json",
           },
         });
-        if (result.ok) {
-          await fetchEvent();
-        }
+        // if (result.ok) {
+        //   fetchEvent();
+        //   toast.success("Event Deleted Successfully",{
+        //     autoClose:1000
+        //   })
+        // }
+          fetchEvent();
+          toast.success("Event Deleted Successfully",{
+            autoClose:1000
+          })   
       } catch (error) {
         console.log(error);
       }
     }
   };
   if (loading) {
-    return <h2>Loading...</h2>;
+    return <Loader/>
   }
   if (err) {
     return <h3>Error: {err}</h3>;
@@ -55,8 +65,7 @@ const Product = () => {
               boxShadow: "0 0 10px 0",
               width: "300px",
               minHeight: "250px",
-              height: "auto",
-              textAlign: "justify",
+              height: "auto"
             }}
           >
             <h2>{item.name?.text}</h2>

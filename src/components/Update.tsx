@@ -1,11 +1,28 @@
 import { Box, Typography, Stack, TextField, Button } from "@mui/material";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { NameContext } from "./Home";
 import { useParams } from "react-router-dom";
 import z from "zod";
-import { isValid } from "zod/v3";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+interface FormType {
+  name: String;
+  summary: String;
+  date: String;
+  start_time: String;
+  end_time: String;
+}
+
+interface Errors {
+  name?: String;
+  summary?: String;
+  date?: String;
+  start_time?: String;
+  end_time?: String;
+}
 
 const schema = z.object({
   name: z.string().min(1, "Title is required"),
@@ -13,37 +30,50 @@ const schema = z.object({
   date: z.string().min(1, "Date is required"),
   start_time: z.string().min(1, "Start time is required"),
   end_time: z.string().min(1, "End time is required"),
-  password: z
-    .string()
-    .min(7, "Min 7 characters required")
-    .regex(/[A-Z]/, "Must have one uppercase letter")
-    .regex(/\d/, "Must have one number"),
 });
 
 const Update = () => {
   const API_KEY = import.meta.env.VITE_API_KEY;
   const navigate = useNavigate();
   const { id } = useParams();
-  const { fetchEvent } = useContext(NameContext);
-  const [err, setErr] = useState("");
+  const { fetchEvent, filterData } = useContext(NameContext);
+  const [err, setErr] = useState<String>("");
   const [errors, setErrors] = useState({});
-  const [useLibrary, setUseLibrary] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [formData, setFormData] = useState({
+  const [useLibrary, setUseLibrary] = useState<Boolean>(false);
+  const [formData, setFormData] = useState<FormType>({
     name: "",
     summary: "",
     date: "",
     start_time: "",
     end_time: "",
-    password: "",
   });
+
+  const currentData = filterData.find((item: { id: String }) => {
+    return item.id === id;
+  });
+
+  useEffect(() => {
+    if (currentData) {
+      const startLocal: String = currentData?.start?.local;
+      const endLocal: String = currentData?.end?.local;
+
+      setFormData({
+        name: currentData?.name?.text || "",
+        summary: currentData?.summary || "",
+        date: startLocal?.split("T")[0] || "",
+        start_time: startLocal?.split("T")[1]?.slice(0, 5) || "",
+        end_time: endLocal?.split("T")[1]?.slice(0, 5) || "",
+      });
+    }
+  }, [currentData]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
   };
   const customValidate = () => {
-    const newErrors = {};
-    let isValid = true;
+    const newErrors: Errors = {};
+    let isValid: Boolean = true;
     if (!formData.name) {
       newErrors.name = "Event name is required";
       isValid = false;
@@ -67,19 +97,6 @@ const Update = () => {
       newErrors.end_time = "End time must be after start time";
       isValid = false;
     }
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-      isValid = false;
-    } else if (formData.password.length < 7) {
-      newErrors.password = "Min 7 Characters is required";
-      isValid = false;
-    } else if (!/[A-Z]/.test(formData.password)) {
-      newErrors.password = "Must have one uppercase letter";
-      isValid = false;
-    } else if (!/\d/.test(formData.password)) {
-      newErrors.password = "Must have one number";
-      isValid = false;
-    }
     setErrors(newErrors);
     return isValid;
   };
@@ -87,7 +104,7 @@ const Update = () => {
   const zodValidate = () => {
     const result = schema.safeParse(formData);
     if (result.success === false) {
-      const newErrors = {};
+      const newErrors: any = {};
       result.error.issues.forEach((e) => {
         newErrors[e.path[0]] = e.message;
       });
@@ -98,14 +115,14 @@ const Update = () => {
     return true;
   };
 
-  const changeToUtc = (date, time) => {
+  const changeToUtc = (date: String, time: String) => {
     return new Date(`${date}T${time}`).toISOString().replace(".000Z", "Z");
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
 
-    const isValid = useLibrary ? zodValidate() : customValidate();
+    const isValid: Boolean = useLibrary ? zodValidate() : customValidate();
 
     if (!isValid) return;
     try {
@@ -129,39 +146,36 @@ const Update = () => {
               utc: changeToUtc(formData.date, formData.end_time),
             },
             summary: formData.summary,
-            password: formData.password,
           },
         }),
       });
       if (result.ok) {
         await fetchEvent();
-        setSuccess(true);
+        toast.success("Event Updated Successfully", {
+          autoClose: 2000,
+        });
+        navigate("/");
         setFormData({
           name: "",
           summary: "",
           date: "",
           start_time: "",
           end_time: "",
-          password: "",
         });
       }
       const data = await result.json();
       console.log("Updated Event:", data);
     } catch (error) {
-      setErr(error.message);
+      if (error instanceof Error) {
+        setErr(error.message);
+      } else {
+        setErr("Something went wrong");
+      }
     }
   };
 
   if (err) {
     return <h1>Server Error: ${err}</h1>;
-  }
-  if(success){
-    return (
-      <>
-      <h1>Event updated Successfully</h1>
-      <button onClick={()=>navigate('/')}>Go to Home Page</button>
-      </>
-    )
   }
 
   return (
@@ -250,18 +264,6 @@ const Update = () => {
             onChange={handleChange}
           />
           {errors.end_time && <p style={{ color: "red" }}>{errors.end_time}</p>}
-          <Typography variant="body1" gutterBottom>
-            Update Password
-          </Typography>
-          <TextField
-            id="outlined-basic"
-            label="Password"
-            variant="outlined"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-          />
-          {errors.password && <p style={{ color: "red" }}>{errors.password}</p>}
           <Button
             variant="contained"
             size="large"

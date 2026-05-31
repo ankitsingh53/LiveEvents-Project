@@ -6,6 +6,8 @@ import { createContext } from "react";
 import CreateEvent from "./CreateEvent";
 import Update from "./Update";
 import ProductDetails from "./ProductDetails";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Event {
   id: string;
@@ -87,6 +89,7 @@ const Home = () => {
           filterData
         }}
       >
+        <ToastContainer/>
         <BrowserRouter>
           <NavBar />
           <Routes>
@@ -95,6 +98,7 @@ const Home = () => {
             <Route path="/update/:id" element={<Update />}/>
             <Route path="/productdetails/:id" element={<ProductDetails />}/>
           </Routes>
+        
         </BrowserRouter>
       </NameContext.Provider>
     </>
