@@ -5,40 +5,35 @@ import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import { Link } from "react-router-dom";
 
-const API_KEY = import.meta.env.VITE_API_KEY;
+const API_KEY:String = import.meta.env.VITE_API_KEY;
 
 const Product = () => {
-  const { eventData, loading, err, fetchEvent } = useContext(NameContext);
+  const { filterData, loading, err, fetchEvent } = useContext(NameContext);
 
-  const handleDelete = async (id) => {
-    const check = confirm('Do you really want to delete this event')
-    if(check){
-    try {
-     const result =  await fetch(
-        `/api/v3/events/${id}/`,
-        {
+  const handleDelete = async (id:Number) => {
+    const check:Boolean = confirm("Do you really want to delete this event");
+    if (check) {
+      try {
+        const result = await fetch(`/api/v3/events/${id}/`, {
           method: "DELETE",
           headers: {
-            'Authorization': `Bearer ${API_KEY}`,
+            Authorization: `Bearer ${API_KEY}`,
             "Content-Type": "application/json",
           },
-        },
-      );
-      if(result.ok){
-      await fetchEvent();
+        });
+        if (result.ok) {
+          await fetchEvent();
+        }
+      } catch (error) {
+        console.log(error);
       }
-
-    } catch (error) {
-        console.log(error)
     }
-  }
   };
-
   if (loading) {
-    return <h5>Loading...</h5>;
+    return <h2>Loading...</h2>;
   }
   if (err) {
-    return <h5>Error: {err}</h5>;
+    return <h3>Error: {err}</h3>;
   }
   return (
     <>
@@ -51,8 +46,8 @@ const Product = () => {
           margin: "30px",
           gap: "50px",
         }}
-      >
-        {eventData.map((item) => (
+      > 
+        {filterData.length!==0 ? filterData.map((item) => (
           <Box
             key={item.id}
             sx={{
@@ -68,10 +63,20 @@ const Product = () => {
             <p>{item.description?.text}</p>
             <Stack spacing={1}>
               <Button sx={{ backgroundColor: "grey", color: "white" }}>
+                 <Link
+                  to={`/productdetails/${item.id}`}
+                  style={{ textDecoration: "none", color: "white" }}
+                >
                 View Details
+                </Link>
               </Button>
               <Button sx={{ backgroundColor: "grey", color: "white" }}>
-               <Link to='/update' style={{textDecoration: 'none', color: 'white'}}>Update Event</Link>
+                <Link
+                  to={`/update/${item.id}`}
+                  style={{ textDecoration: "none", color: "white" }}
+                >
+                  Update Event
+                </Link>
               </Button>
               <Button
                 sx={{ backgroundColor: "grey", color: "white" }}
@@ -81,7 +86,8 @@ const Product = () => {
               </Button>
             </Stack>
           </Box>
-        ))}
+        )) : <h2>Results not found</h2>
+      }
       </Box>
     </>
   );
