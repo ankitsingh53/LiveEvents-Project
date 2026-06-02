@@ -1,3 +1,4 @@
+import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import NavBar from "./NavBar";
 import Product from "./Product";
@@ -17,14 +18,26 @@ interface Event {
     text: string;
   };
 }
-const API_KEY: String = import.meta.env.VITE_API_KEY;
-export const NameContext = createContext<any>(null);
+interface ContextData {
+  eventData: Event[] | null;
+  setEventData: React.Dispatch<React.SetStateAction<Event[]>>;
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  err: string | "";
+  fetchEvent: () => void;
+  search: string | "";
+  setSearch: React.Dispatch<React.SetStateAction<string>>;
+  filterData: Event[];
+  setErr: React.Dispatch<React.SetStateAction<string>>;
+}
+const API_KEY: string = import.meta.env.VITE_API_KEY;
+export const NameContext = createContext<ContextData | null>(null);
 const Home = () => {
   const [eventData, setEventData] = useState<Event[]>([]);
-  const [loading, setLoading] = useState<Boolean>(true);
-  const [err, setErr] = useState<String>("");
-  const [search, setSearch] = useState<String>("");
-  const [debounceSearch, setDebounceSearch] = useState<String>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [err, setErr] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [debounceSearch, setDebounceSearch] = useState<string>("");
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebounceSearch(search);
@@ -47,7 +60,6 @@ const Home = () => {
         throw new Error("Network response failed...");
       }
       const data = await result.json();
-      console.log(data.events);
       setEventData(data?.events);
     } catch (error) {
       if (error instanceof Error) {
@@ -60,7 +72,10 @@ const Home = () => {
     }
   };
   useEffect(() => {
-    fetchEvent();
+    const load = async ()=>{
+      await fetchEvent();
+    };
+    load();
   }, []);
   const filterData: Event[] = eventData.filter((item) =>
     item.name.text.toLowerCase().includes(debounceSearch.trim().toLowerCase()),
@@ -78,6 +93,7 @@ const Home = () => {
           search,
           setSearch,
           filterData,
+          setErr,
         }}
       >
         <ToastContainer />

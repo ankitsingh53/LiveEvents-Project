@@ -8,20 +8,20 @@ import z from "zod";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 interface FormType {
-  name: String;
-  summary: String;
-  date: String;
-  start_time: String;
-  end_time: String;
+  name: string;
+  summary: string;
+  date: string;
+  start_time: string;
+  end_time: string;
 }
 interface Errors {
-  name?: String;
-  summary?: String;
-  date?: String;
-  start_time?: String;
-  end_time?: String;
+  name?: string;
+  summary?: string;
+  date?: string;
+  start_time?: string;
+  end_time?: string;
 }
-interface Event {
+interface EventItem {
   id: string;
   name: {
     text: string;
@@ -30,12 +30,12 @@ interface Event {
     text: string;
   };
   start: {
-    local: String;
+    local: string;
   };
   end: {
-    local: String;
+    local: string;
   };
-  summary: String;
+  summary: string;
 }
 const schema = z
   .object({
@@ -49,14 +49,13 @@ const schema = z
     message: "End time must be after start time",
     path: ["end_time"],
   });
+const API_KEY: string = import.meta.env.VITE_API_KEY;
 const Update = () => {
-  const API_KEY: String = import.meta.env.VITE_API_KEY;
   const navigate = useNavigate();
   const { id } = useParams();
-  const { fetchEvent, filterData } = useContext(NameContext);
-  const [err, setErr] = useState<String>("");
+  const [err, setErr] = useState<string>("");
   const [errors, setErrors] = useState<Errors>({});
-  const [useLibrary, setUseLibrary] = useState<Boolean>(false);
+  const [useLibrary, setUseLibrary] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormType>({
     name: "",
     summary: "",
@@ -64,21 +63,26 @@ const Update = () => {
     start_time: "",
     end_time: "",
   });
-  const currentData: Event = filterData.find((item: { id: String }) => {
+  const context = useContext(NameContext);
+  if(!context){
+    return;
+  }
+  const { fetchEvent, filterData } = context;
+  const currentData = (filterData as EventItem[]).find((item: { id: string }) => {
     return item.id === id;
   });
   useEffect(() => {
-    if (currentData) {
-      const startLocal: String = currentData?.start?.local;
-      const endLocal: String = currentData?.end?.local;
-      setFormData({
+    if (!currentData) return;
+      const startLocal = currentData?.start?.local;
+      const endLocal = currentData?.end?.local;
+      const newFormData = {
         name: currentData?.name?.text || "",
         summary: currentData?.summary || "",
         date: startLocal?.split("T")[0] || "",
         start_time: startLocal?.split("T")[1]?.slice(0, 5) || "",
         end_time: endLocal?.split("T")[1]?.slice(0, 5) || "",
-      });
-    }
+      };
+      setFormData(newFormData);
   }, [currentData]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -86,7 +90,7 @@ const Update = () => {
   };
   const customValidate = () => {
     const newErrors: Errors = {};
-    let isValid: Boolean = true;
+    let isValid: boolean = true;
     if (!formData.name) {
       newErrors.name = "Event name is required";
       isValid = false;
@@ -116,9 +120,9 @@ const Update = () => {
   const zodValidate = () => {
     const result = schema.safeParse(formData);
     if (result.success === false) {
-      const newErrors: any = {};
+      const newErrors:Record<string, string> = {};
       result.error.issues.forEach((e) => {
-        newErrors[e.path[0]] = e.message;
+        newErrors[e.path[0] as string] = e.message;
       });
       setErrors(newErrors);
       return false;
@@ -126,14 +130,14 @@ const Update = () => {
     setErrors({});
     return true;
   };
-  const changeToUtc = (date: String, time: String) => {
+  const changeToUtc = (date: string, time: string) => {
     return new Date(`${date}T${time}`).toISOString().replace(".000Z", "Z");
   };
   const handleSubmit = async (
     e: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     e.preventDefault();
-    const isValid: Boolean = useLibrary ? zodValidate() : customValidate();
+    const isValid: boolean = useLibrary ? zodValidate() : customValidate();
     if (!isValid) return;
     try {
       const result = await fetch(`/api/v3/events/${id}/`, {
@@ -173,8 +177,7 @@ const Update = () => {
           end_time: "",
         });
       }
-      const data = await result.json();
-      console.log("Updated Event:", data);
+      // const data = await result.json();
     } catch (error) {
       if (error instanceof Error) {
         setErr(error.message);
@@ -289,7 +292,6 @@ const Update = () => {
             variant="contained"
             size="large"
             color="primary"
-            type="submit"
             onClick={() => navigate("/")}
           >
             Go Back

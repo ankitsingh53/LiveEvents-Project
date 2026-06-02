@@ -11,25 +11,27 @@ import "../App.css";
 interface ItemData {
   id: number | string;
   name: {
-    text: String;
+    text: string;
   };
   description: {
-    text: String;
+    text: string;
   };
 }
-type GetSpecific = (pageNumber: number) => void;
+// type GetSpecific = (pageNumber: number) => void;
 const API_KEY: string = import.meta.env.VITE_API_KEY;
 const Product = () => {
-  const { filterData, loading, err, fetchEvent } = useContext(NameContext);
+  const context = useContext(NameContext);
   const [currentpage, SetCurrentPage] = useState(1);
-  const [popUp, setpopUp] = useState<Boolean>(false);
+  const [popUp, setpopUp] = useState<boolean>(false);
   const [deleteId, setDeleteID] = useState<number | null>();
+   if (!context) return;
+  const { filterData, loading, err, fetchEvent, setErr } = context;
   const itemsPerPage = 10;
   const starIndex = (currentpage - 1) * itemsPerPage;
   const endIndex = starIndex + itemsPerPage;
   const currentItems = filterData.slice(starIndex, endIndex);
   const totalPages = Math.ceil(filterData.length / itemsPerPage);
-  const goToSpecificPage: GetSpecific = (pageNumber) => {
+  const goToSpecificPage = (pageNumber: number) => {
     SetCurrentPage(pageNumber);
   };
   const handleDelete = async (id: number) => {
@@ -44,11 +46,13 @@ const Product = () => {
       if (result.ok) {
         fetchEvent();
         toast.success("Event Deleted Successfully", {
-          autoClose: 1000,
+          autoClose: 2000,
         });
       }
     } catch (error) {
-      console.log(error);
+      if (error instanceof Error) {
+        setErr(error.message);
+      }
     }
   };
   if (loading) {

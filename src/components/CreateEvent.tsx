@@ -7,40 +7,40 @@ import z from "zod";
 import { toast } from "react-toastify";
 
 interface GetFormData {
-  name: String;
-  summary: String;
-  date: String;
-  start_time: String;
-  end_time: String;
+  name: string;
+  summary: string;
+  date: string;
+  start_time: string;
+  end_time: string;
 }
 
 interface FormErrors {
-  name?: String;
-  summary?: String;
-  date?: String;
-  start_time?: String;
-  end_time?: String;
+  name?: string;
+  summary?: string;
+  date?: string;
+  start_time?: string;
+  end_time?: string;
 }
 
-const schema = z.object({
-  name: z.string().min(1, "Title is required"),
-  summary: z.string().min(10, "min 10 characters"),
-  date: z.string().min(1, "Date is required"),
-  start_time: z.string().min(1, "Start time is required"),
-  end_time: z.string().min(1, "End time is required")
-}).refine(obj=>obj.start_time< obj.end_time,{
-  message: "End time must be after Start time",
-  path: ['end_time']
-});
-
+const schema = z
+  .object({
+    name: z.string().min(1, "Title is required"),
+    summary: z.string().min(10, "min 10 characters"),
+    date: z.string().min(1, "Date is required"),
+    start_time: z.string().min(1, "Start time is required"),
+    end_time: z.string().min(1, "End time is required"),
+  })
+  .refine((obj) => obj.start_time < obj.end_time, {
+    message: "End time must be after Start time",
+    path: ["end_time"],
+  });
+const API_KEY = import.meta.env.VITE_API_KEY;
 const CreateEvent = () => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
   const navigate = useNavigate();
-  const { fetchEvent } = useContext(NameContext);
-  const[loading, setLoading] = useState(false)
+  const context = useContext(NameContext);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [err, setErr] = useState<String>("");
-  const [useLibrary, setUseLibrary] = useState<Boolean>(false);
+  const [err, setErr] = useState<string>("");
+  const [useLibrary, setUseLibrary] = useState<boolean>(false);
   const [formData, setFormData] = useState<GetFormData>({
     name: "",
     summary: "",
@@ -48,18 +48,19 @@ const CreateEvent = () => {
     start_time: "",
     end_time: "",
   });
+   if (!context) return;
+  const { fetchEvent } = context;
 
-  const today = new Date().toISOString().split("T")[0]
-  console.log(today)
+  const today = new Date().toISOString().split("T")[0];
 
-  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const customValidate = () => {
     const newErrors: FormErrors = {};
-    let isValid:Boolean = true;
+    let isValid: boolean = true;
     if (!formData.name) {
       newErrors.name = "Event name is required";
       isValid = false;
@@ -90,9 +91,9 @@ const CreateEvent = () => {
   const zodValidate = () => {
     const result = schema.safeParse(formData);
     if (result.success === false) {
-      const newErrors:any = {};
+      const newErrors:Record<string, string>= {};
       result.error.issues.forEach((e) => {
-        newErrors[e.path[0]] = e.message;
+        newErrors[String(e.path[0])] = e.message;
       });
       setErrors(newErrors);
       return false;
@@ -101,13 +102,13 @@ const CreateEvent = () => {
     return true;
   };
 
-  const changeToUtc = (date: String, time: String) => {
+  const changeToUtc = (date: string, time: string) => {
     return new Date(`${date}T${time}`).toISOString().replace(".000Z", "Z");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const isValid:Boolean = useLibrary ? zodValidate() : customValidate();
+    const isValid: boolean = useLibrary ? zodValidate() : customValidate();
     if (!isValid) return;
     try {
       const result = await fetch(
@@ -137,9 +138,9 @@ const CreateEvent = () => {
           }),
         },
       );
-      if(result.ok){
-         fetchEvent();
-        navigate('/')
+      if (result.ok) {
+        fetchEvent();
+        navigate("/");
         toast.success("Event Created Successfully", {
           autoClose: 1000,
         });
@@ -151,10 +152,8 @@ const CreateEvent = () => {
           end_time: "",
         });
       }
-      const data = await result.json();
-      console.log("Created Event:", data);
+      // const data = await result.json();
     } catch (error) {
-      setLoading(false)
       if (error instanceof Error) {
         setErr(error.message);
       } else {
@@ -223,9 +222,9 @@ const CreateEvent = () => {
             variant="outlined"
             name="date"
             slotProps={{
-              htmlInput:{
+              htmlInput: {
                 min: today,
-              }
+              },
             }}
             type="date"
             value={formData.date}

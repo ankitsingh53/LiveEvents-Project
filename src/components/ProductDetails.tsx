@@ -13,18 +13,22 @@ interface CurrentEvent {
     text: string;
   };
   start: {
-    local: String | Number | Date;
+    local: string;
+    utc: string;
+    timezone: string;
   };
   end: {
-    local: String | Number | Date;
+    local: string;
+    utc: string;
+    timezone: string;
   };
 }
-const API_KEY: String = import.meta.env.VITE_API_KEY;
+const API_KEY: string = import.meta.env.VITE_API_KEY;
 const ProductDetails = () => {
   const { id } = useParams();
-  const [result, setResult] = useState<CurrentEvent | any>();
-  const [loading, setLoading] = useState<Boolean>(true);
-  const [err, setErr] = useState<String>("");
+  const [result, setResult] = useState<CurrentEvent | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [err, setErr] = useState<string>("");
   const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
@@ -59,7 +63,8 @@ const ProductDetails = () => {
   if (err) {
     return <h3>Error: {err}</h3>;
   }
-  const eventDate = new Date(result?.start?.local);
+  if(!result) return;
+  const eventDate = new Date(result.start.local);
   const date = eventDate.toLocaleDateString();
   const time = eventDate.toLocaleTimeString("en-IN");
   const endtime = new Date(result?.end?.local).toLocaleTimeString("en-IN");
