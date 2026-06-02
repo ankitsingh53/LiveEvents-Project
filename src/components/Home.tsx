@@ -8,37 +8,30 @@ import Update from "./Update";
 import ProductDetails from "./ProductDetails";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 interface Event {
   id: string;
-  name:{
-    text: string
+  name: {
+    text: string;
   };
   description: {
-    text: string
-  }
+    text: string;
+  };
 }
-
-const API_KEY:String = import.meta.env.VITE_API_KEY;
-
+const API_KEY: String = import.meta.env.VITE_API_KEY;
 export const NameContext = createContext<any>(null);
-
 const Home = () => {
   const [eventData, setEventData] = useState<Event[]>([]);
   const [loading, setLoading] = useState<Boolean>(true);
   const [err, setErr] = useState<String>("");
   const [search, setSearch] = useState<String>("");
-  const [debounceSearch, setDebounceSearch] = useState<String>("")
-
-
-  useEffect(()=>{
-    const timer = setTimeout(()=>{
-        setDebounceSearch(search);
-    }, 800)
-    return()=>clearTimeout(timer)
-  }, [search])
-
-  const fetchEvent = async ():Promise<void> => {
+  const [debounceSearch, setDebounceSearch] = useState<String>("");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebounceSearch(search);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [search]);
+  const fetchEvent = async (): Promise<void> => {
     try {
       const result = await fetch(
         "/api/v3/organizations/3003835690035/events/",
@@ -57,23 +50,21 @@ const Home = () => {
       console.log(data.events);
       setEventData(data?.events);
     } catch (error) {
-      if(error instanceof Error){
+      if (error instanceof Error) {
         setErr(error.message);
-      }else{
-        setErr("Something is Wrong")
-      } 
+      } else {
+        setErr("Something is Wrong");
+      }
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchEvent();
   }, []);
-
-  const filterData = eventData.filter((item)=>item.name.text.toLowerCase().includes(debounceSearch.trim().toLowerCase()))
-
-
+  const filterData: Event[] = eventData.filter((item) =>
+    item.name.text.toLowerCase().includes(debounceSearch.trim().toLowerCase()),
+  );
   return (
     <>
       <NameContext.Provider
@@ -86,19 +77,18 @@ const Home = () => {
           fetchEvent,
           search,
           setSearch,
-          filterData
+          filterData,
         }}
       >
-        <ToastContainer/>
+        <ToastContainer />
         <BrowserRouter>
           <NavBar />
           <Routes>
             <Route path="/" element={<Product />} />
             <Route path="/create" element={<CreateEvent />} />
-            <Route path="/update/:id" element={<Update />}/>
-            <Route path="/productdetails/:id" element={<ProductDetails />}/>
+            <Route path="/update/:id" element={<Update />} />
+            <Route path="/productdetails/:id" element={<ProductDetails />} />
           </Routes>
-        
         </BrowserRouter>
       </NameContext.Provider>
     </>

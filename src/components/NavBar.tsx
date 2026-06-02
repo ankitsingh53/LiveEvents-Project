@@ -8,13 +8,11 @@ import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { NameContext } from "./Home";
-
 export default function NavBar() {
   const { search, setSearch } =
     useContext(NameContext);
   const location = useLocation();
   const showSearch = location.pathname === "/";
-
   return (
     <Box>
       <AppBar position="static">

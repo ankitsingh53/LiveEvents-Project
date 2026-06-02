@@ -3,86 +3,77 @@ import { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-
+import Loader from "./Loader";
 interface CurrentEvent {
   id: string;
-  name:{
-    text: string
+  name: {
+    text: string;
   };
   description: {
-    text: string
-  }
+    text: string;
+  };
   start: {
-    local: String | Number | Date
-  }
+    local: String | Number | Date;
+  };
   end: {
-    local: String | Number | Date
-  }
+    local: String | Number | Date;
+  };
 }
-
-const API_KEY:String = import.meta.env.VITE_API_KEY;
-
+const API_KEY: String = import.meta.env.VITE_API_KEY;
 const ProductDetails = () => {
   const { id } = useParams();
-  const [result, setResult] = useState<CurrentEvent| any>();
-  const [loading, setLoading] = useState<Boolean>(true)
-  const [err, setErr] = useState<String>("")
-
+  const [result, setResult] = useState<CurrentEvent | any>();
+  const [loading, setLoading] = useState<Boolean>(true);
+  const [err, setErr] = useState<String>("");
   const navigate = useNavigate();
-  
-  useEffect(()=>{
+  useEffect(() => {
     const fetchData = async () => {
-    try {
-      const response = await fetch(`/api/v3/events/${id}/`, {
-        method: "GET",
-        headers: {
-          'Authorization': `Bearer ${API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Network response failed...");
+      try {
+        const response = await fetch(`/api/v3/events/${id}/`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Network response failed...");
+        }
+        const data = await response.json();
+        setResult(data);
+      } catch (error) {
+        if (error instanceof Error) {
+          setErr(error.message);
+        } else {
+          setErr("Something went wrong");
+        }
+      } finally {
+        setLoading(false);
       }
-      const data = await response.json();   
-      setResult(data);
-    } catch (error) {
-      if(error instanceof Error){
-        setErr(error.message)
-      }else{
-        setErr("Something went wrong")
-      }
-    }finally{
-        setLoading(false)
-    }
-  };
-
-  fetchData()
-  },[id])
-
-  if(loading){
-    return <h2>Loading...</h2>
+    };
+    fetchData();
+  }, [id]);
+  if (loading) {
+    return <Loader />;
   }
   if (err) {
     return <h3>Error: {err}</h3>;
   }
-  const eventDate = new Date(result?.start?.local)
-  const date = eventDate.toLocaleDateString()
-  const time = eventDate.toLocaleTimeString("en-IN")
-
-  const endtime = new Date(result?.end?.local).toLocaleTimeString("en-IN")
-
-
+  const eventDate = new Date(result?.start?.local);
+  const date = eventDate.toLocaleDateString();
+  const time = eventDate.toLocaleTimeString("en-IN");
+  const endtime = new Date(result?.end?.local).toLocaleTimeString("en-IN");
   return (
     <>
       <Box
         sx={{
           padding: "30px",
           boxShadow: "0 0 10px 0",
-          width: "300px",
+          width: "40%",
           minHeight: "250px",
           height: "auto",
           textAlign: "justify",
-          margin: "40px",
+          margin: "60px",
         }}
       >
         <h2>{result?.name?.text}</h2>
@@ -90,20 +81,18 @@ const ProductDetails = () => {
         <p>Date:- {date}</p>
         <p>Start time:- {time}</p>
         <p>End time:- {endtime}</p>
-
         <Button
-            variant="contained"
-            size="large"
-            color="primary"
-            type="submit"
-            onClick={() => navigate("/")}
-          >
-            Go To Home Page
-          </Button>
-
+          variant="contained"
+          size="large"
+          color="primary"
+          type="submit"
+          onClick={() => navigate("/")}
+          sx={{ display: "flex", alignItems: "flex-end" }}
+        >
+          Go To Home Page
+        </Button>
       </Box>
     </>
   );
 };
-
 export default ProductDetails;

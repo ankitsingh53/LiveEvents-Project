@@ -7,7 +7,6 @@ import { useParams } from "react-router-dom";
 import z from "zod";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 interface FormType {
   name: String;
   summary: String;
@@ -15,7 +14,6 @@ interface FormType {
   start_time: String;
   end_time: String;
 }
-
 interface Errors {
   name?: String;
   summary?: String;
@@ -23,22 +21,41 @@ interface Errors {
   start_time?: String;
   end_time?: String;
 }
-
-const schema = z.object({
-  name: z.string().min(1, "Title is required"),
-  summary: z.string().min(10, "min 10 characters"),
-  date: z.string().min(1, "Date is required"),
-  start_time: z.string().min(1, "Start time is required"),
-  end_time: z.string().min(1, "End time is required"),
-});
-
+interface Event {
+  id: string;
+  name: {
+    text: string;
+  };
+  description: {
+    text: string;
+  };
+  start: {
+    local: String;
+  };
+  end: {
+    local: String;
+  };
+  summary: String;
+}
+const schema = z
+  .object({
+    name: z.string().min(1, "Title is required"),
+    summary: z.string().min(10, "min 10 characters"),
+    date: z.string().min(1, "Date is required"),
+    start_time: z.string().min(1, "Start time is required"),
+    end_time: z.string().min(1, "End time is required"),
+  })
+  .refine((obj) => obj.start_time < obj.end_time, {
+    message: "End time must be after start time",
+    path: ["end_time"],
+  });
 const Update = () => {
-  const API_KEY = import.meta.env.VITE_API_KEY;
+  const API_KEY: String = import.meta.env.VITE_API_KEY;
   const navigate = useNavigate();
   const { id } = useParams();
   const { fetchEvent, filterData } = useContext(NameContext);
   const [err, setErr] = useState<String>("");
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Errors>({});
   const [useLibrary, setUseLibrary] = useState<Boolean>(false);
   const [formData, setFormData] = useState<FormType>({
     name: "",
@@ -47,16 +64,13 @@ const Update = () => {
     start_time: "",
     end_time: "",
   });
-
-  const currentData = filterData.find((item: { id: String }) => {
+  const currentData: Event = filterData.find((item: { id: String }) => {
     return item.id === id;
   });
-
   useEffect(() => {
     if (currentData) {
       const startLocal: String = currentData?.start?.local;
       const endLocal: String = currentData?.end?.local;
-
       setFormData({
         name: currentData?.name?.text || "",
         summary: currentData?.summary || "",
@@ -66,8 +80,7 @@ const Update = () => {
       });
     }
   }, [currentData]);
-
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
   };
@@ -100,7 +113,6 @@ const Update = () => {
     setErrors(newErrors);
     return isValid;
   };
-
   const zodValidate = () => {
     const result = schema.safeParse(formData);
     if (result.success === false) {
@@ -114,16 +126,14 @@ const Update = () => {
     setErrors({});
     return true;
   };
-
   const changeToUtc = (date: String, time: String) => {
     return new Date(`${date}T${time}`).toISOString().replace(".000Z", "Z");
   };
-
-  const handleSubmit = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
     e.preventDefault();
-
     const isValid: Boolean = useLibrary ? zodValidate() : customValidate();
-
     if (!isValid) return;
     try {
       const result = await fetch(`/api/v3/events/${id}/`, {
@@ -150,7 +160,7 @@ const Update = () => {
         }),
       });
       if (result.ok) {
-        await fetchEvent();
+        fetchEvent();
         toast.success("Event Updated Successfully", {
           autoClose: 2000,
         });
@@ -173,11 +183,9 @@ const Update = () => {
       }
     }
   };
-
   if (err) {
     return <h1>Server Error: ${err}</h1>;
   }
-
   return (
     <>
       <Box
@@ -233,6 +241,11 @@ const Update = () => {
             variant="outlined"
             name="date"
             type="date"
+            slotProps={{
+              htmlInput: {
+                min: new Date().toISOString().split("T")[0],
+              },
+            }}
             value={formData.date}
             onChange={handleChange}
           />

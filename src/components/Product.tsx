@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { NameContext } from "./Home";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
@@ -7,40 +7,52 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loader from "./Loader";
-
-const API_KEY:String = import.meta.env.VITE_API_KEY;
-
+import "../App.css";
+interface ItemData {
+  id: number | string;
+  name: {
+    text: String;
+  };
+  description: {
+    text: String;
+  };
+}
+type GetSpecific = (pageNumber: number) => void;
+const API_KEY: string = import.meta.env.VITE_API_KEY;
 const Product = () => {
   const { filterData, loading, err, fetchEvent } = useContext(NameContext);
-
-  const handleDelete = async (id:Number) => {
-    const check:Boolean = confirm("Do you really want to delete this event");
-    if (check) {
-      try {
-        const result = await fetch(`/api/v3/events/${id}/`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${API_KEY}`,
-            "Content-Type": "application/json",
-          },
+  const [currentpage, SetCurrentPage] = useState(1);
+  const [popUp, setpopUp] = useState<Boolean>(false);
+  const [deleteId, setDeleteID] = useState<number | null>();
+  const itemsPerPage = 10;
+  const starIndex = (currentpage - 1) * itemsPerPage;
+  const endIndex = starIndex + itemsPerPage;
+  const currentItems = filterData.slice(starIndex, endIndex);
+  const totalPages = Math.ceil(filterData.length / itemsPerPage);
+  const goToSpecificPage: GetSpecific = (pageNumber) => {
+    SetCurrentPage(pageNumber);
+  };
+  const handleDelete = async (id: number) => {
+    try {
+      const result = await fetch(`/api/v3/events/${id}/`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (result.ok) {
+        fetchEvent();
+        toast.success("Event Deleted Successfully", {
+          autoClose: 1000,
         });
-        // if (result.ok) {
-        //   fetchEvent();
-        //   toast.success("Event Deleted Successfully",{
-        //     autoClose:1000
-        //   })
-        // }
-          fetchEvent();
-          toast.success("Event Deleted Successfully",{
-            autoClose:1000
-          })   
-      } catch (error) {
-        console.log(error);
       }
+    } catch (error) {
+      console.log(error);
     }
   };
   if (loading) {
-    return <Loader/>
+    return <Loader />;
   }
   if (err) {
     return <h3>Error: {err}</h3>;
@@ -53,51 +65,158 @@ const Product = () => {
           justifyContent: "center",
           alignItems: "center",
           flexWrap: "wrap",
-          margin: "30px",
+          margin: "70px",
           gap: "50px",
         }}
-      > 
-        {filterData.length!==0 ? filterData.map((item) => (
+      >
+        {currentItems.length !== 0 ? (
+          currentItems.map((item: ItemData) => (
+            <Box
+              key={item.id}
+              sx={{
+                padding: "30px",
+                boxShadow: "0 0 10px 0",
+                width: "300px",
+                minHeight: "350px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                overflowWrap: "break-word",
+              }}
+            >
+              <Box>
+                <h2>{item.name?.text}</h2>
+                <p>{item.description?.text}</p>
+              </Box>
+              <Stack spacing={1}>
+                <Button
+                  sx={{ backgroundColor: "rgb(14, 114, 28)", color: "white" }}
+                >
+                  <Link
+                    to={`/productdetails/${item.id}`}
+                    style={{ textDecoration: "none", color: "white" }}
+                  >
+                    View Details
+                  </Link>
+                </Button>
+                <Button
+                  sx={{ backgroundColor: "rgb(20, 81, 112)", color: "white" }}
+                >
+                  <Link
+                    to={`/update/${item.id}`}
+                    style={{ textDecoration: "none", color: "white" }}
+                  >
+                    Update Event
+                  </Link>
+                </Button>
+                <Button
+                  sx={{ backgroundColor: "rgb(161, 9, 9)", color: "white" }}
+                  onClick={() => {
+                    setDeleteID(Number(item.id));
+                    setpopUp(true);
+                  }}
+                >
+                  Delete
+                </Button>
+              </Stack>
+            </Box>
+          ))
+        ) : (
+          <h2>Results not found</h2>
+        )}
+        {popUp && (
           <Box
-            key={item.id}
             sx={{
-              padding: "30px",
-              boxShadow: "0 0 10px 0",
-              width: "300px",
-              minHeight: "250px",
-              height: "auto"
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              zIndex: 999,
             }}
           >
-            <h2>{item.name?.text}</h2>
-            <p>{item.description?.text}</p>
-            <Stack spacing={1}>
-              <Button sx={{ backgroundColor: "grey", color: "white" }}>
-                 <Link
-                  to={`/productdetails/${item.id}`}
-                  style={{ textDecoration: "none", color: "white" }}
+            <Box
+              sx={{
+                background: "white",
+                padding: "30px",
+                borderRadius: "10px",
+                textAlign: "center",
+              }}
+            >
+              <h3>Are you sure you want to delete?</h3>
+              <Stack direction="row" spacing={1} sx={{ marginTop: "10px" }}>
+                <Button variant="contained" onClick={() => setpopUp(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleDelete(Number(deleteId));
+                    setpopUp(false);
+                  }}
+                  sx={{ backgroundColor: "rgb(161, 9, 9)", color: "white" }}
                 >
-                View Details
-                </Link>
-              </Button>
-              <Button sx={{ backgroundColor: "grey", color: "white" }}>
-                <Link
-                  to={`/update/${item.id}`}
-                  style={{ textDecoration: "none", color: "white" }}
-                >
-                  Update Event
-                </Link>
-              </Button>
-              <Button
-                sx={{ backgroundColor: "grey", color: "white" }}
-                onClick={() => handleDelete(item.id)}
-              >
-                Delete
-              </Button>
-            </Stack>
+                  Yes
+                </Button>
+              </Stack>
+            </Box>
           </Box>
-        )) : <h2>Results not found</h2>
-      }
+        )}
       </Box>
+      {currentItems.length !== 0 && (
+        <div
+          style={{
+            margin: "20px auto",
+            padding: "10px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <button
+            style={{
+              padding: "10px",
+              fontSize: "1rem",
+              borderRadius: "10px",
+            }}
+            onClick={() => SetCurrentPage((prev) => prev - 1)}
+            disabled={currentpage === 1}
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => goToSpecificPage(i + 1)}
+              className={currentpage === i + 1 ? "active" : ""}
+              style={{
+                padding: "10px",
+                fontSize: "1rem",
+                border: "none",
+                outline: "none",
+                borderRadius: "10px",
+              }}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            style={{
+              padding: "10px",
+              fontSize: "1rem",
+              borderRadius: "10px",
+            }}
+            onClick={() => SetCurrentPage((prev) => prev + 1)}
+            disabled={currentpage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </>
   );
 };

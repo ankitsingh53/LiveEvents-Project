@@ -27,14 +27,18 @@ const schema = z.object({
   summary: z.string().min(10, "min 10 characters"),
   date: z.string().min(1, "Date is required"),
   start_time: z.string().min(1, "Start time is required"),
-  end_time: z.string().min(1, "End time is required"),
+  end_time: z.string().min(1, "End time is required")
+}).refine(obj=>obj.start_time< obj.end_time,{
+  message: "End time must be after Start time",
+  path: ['end_time']
 });
 
 const CreateEvent = () => {
   const API_KEY = import.meta.env.VITE_API_KEY;
   const navigate = useNavigate();
   const { fetchEvent } = useContext(NameContext);
-  const [errors, setErrors] = useState({});
+  const[loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<FormErrors>({});
   const [err, setErr] = useState<String>("");
   const [useLibrary, setUseLibrary] = useState<Boolean>(false);
   const [formData, setFormData] = useState<GetFormData>({
@@ -45,14 +49,17 @@ const CreateEvent = () => {
     end_time: "",
   });
 
-  const handleChange = (e) => {
+  const today = new Date().toISOString().split("T")[0]
+  console.log(today)
+
+  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const customValidate = () => {
     const newErrors: FormErrors = {};
-    let isValid = true;
+    let isValid:Boolean = true;
     if (!formData.name) {
       newErrors.name = "Event name is required";
       isValid = false;
@@ -83,7 +90,7 @@ const CreateEvent = () => {
   const zodValidate = () => {
     const result = schema.safeParse(formData);
     if (result.success === false) {
-      const newErrors = {};
+      const newErrors:any = {};
       result.error.issues.forEach((e) => {
         newErrors[e.path[0]] = e.message;
       });
@@ -100,7 +107,7 @@ const CreateEvent = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const isValid = useLibrary ? zodValidate() : customValidate();
+    const isValid:Boolean = useLibrary ? zodValidate() : customValidate();
     if (!isValid) return;
     try {
       const result = await fetch(
@@ -130,7 +137,8 @@ const CreateEvent = () => {
           }),
         },
       );
-        await fetchEvent();
+      if(result.ok){
+         fetchEvent();
         navigate('/')
         toast.success("Event Created Successfully", {
           autoClose: 1000,
@@ -142,9 +150,11 @@ const CreateEvent = () => {
           start_time: "",
           end_time: "",
         });
+      }
       const data = await result.json();
       console.log("Created Event:", data);
     } catch (error) {
+      setLoading(false)
       if (error instanceof Error) {
         setErr(error.message);
       } else {
@@ -212,6 +222,11 @@ const CreateEvent = () => {
             id="outlined-basic"
             variant="outlined"
             name="date"
+            slotProps={{
+              htmlInput:{
+                min: today,
+              }
+            }}
             type="date"
             value={formData.date}
             onChange={handleChange}
