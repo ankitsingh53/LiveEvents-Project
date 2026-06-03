@@ -48,7 +48,7 @@ const CreateEvent = () => {
     start_time: "",
     end_time: "",
   });
-   if (!context) return;
+  if (!context) return;
   const { fetchEvent } = context;
 
   const today = new Date().toISOString().split("T")[0];
@@ -91,7 +91,7 @@ const CreateEvent = () => {
   const zodValidate = () => {
     const result = schema.safeParse(formData);
     if (result.success === false) {
-      const newErrors:Record<string, string>= {};
+      const newErrors: Record<string, string> = {};
       result.error.issues.forEach((e) => {
         newErrors[String(e.path[0])] = e.message;
       });
@@ -112,7 +112,7 @@ const CreateEvent = () => {
     if (!isValid) return;
     try {
       const result = await fetch(
-        "/api/v3/organizations/3003835690035/events/",
+        "https://www.eventbriteapi.com/v3/organizations/3003835690035/events/",
         {
           method: "POST",
           headers: {

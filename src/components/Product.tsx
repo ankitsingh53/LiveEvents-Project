@@ -24,7 +24,7 @@ const Product = () => {
   const [currentpage, SetCurrentPage] = useState(1);
   const [popUp, setpopUp] = useState<boolean>(false);
   const [deleteId, setDeleteID] = useState<number | null>();
-   if (!context) return;
+  if (!context) return;
   const { filterData, loading, err, fetchEvent, setErr } = context;
   const itemsPerPage = 10;
   const starIndex = (currentpage - 1) * itemsPerPage;
@@ -36,7 +36,7 @@ const Product = () => {
   };
   const handleDelete = async (id: number) => {
     try {
-      const result = await fetch(`/api/v3/events/${id}/`, {
+      const result = await fetch(`https://www.eventbriteapi.com/v3/events/${id}/`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${API_KEY}`,

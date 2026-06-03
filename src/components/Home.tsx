@@ -47,7 +47,7 @@ const Home = () => {
   const fetchEvent = async (): Promise<void> => {
     try {
       const result = await fetch(
-        "/api/v3/organizations/3003835690035/events/",
+        "https://www.eventbriteapi.com/v3/organizations/3003835690035/events/",
         {
           method: "GET",
           headers: {
@@ -72,7 +72,7 @@ const Home = () => {
     }
   };
   useEffect(() => {
-    const load = async ()=>{
+    const load = async () => {
       await fetchEvent();
     };
     load();
@@ -97,7 +97,7 @@ const Home = () => {
         }}
       >
         <ToastContainer />
-        <BrowserRouter>
+        <BrowserRouter basename="/LiveEvents-Project">
           <NavBar />
           <Routes>
             <Route path="/" element={<Product />} />

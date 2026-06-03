@@ -64,25 +64,27 @@ const Update = () => {
     end_time: "",
   });
   const context = useContext(NameContext);
-  if(!context){
+  if (!context) {
     return;
   }
   const { fetchEvent, filterData } = context;
-  const currentData = (filterData as EventItem[]).find((item: { id: string }) => {
-    return item.id === id;
-  });
+  const currentData = (filterData as EventItem[]).find(
+    (item: { id: string }) => {
+      return item.id === id;
+    },
+  );
   useEffect(() => {
     if (!currentData) return;
-      const startLocal = currentData?.start?.local;
-      const endLocal = currentData?.end?.local;
-      const newFormData = {
-        name: currentData?.name?.text || "",
-        summary: currentData?.summary || "",
-        date: startLocal?.split("T")[0] || "",
-        start_time: startLocal?.split("T")[1]?.slice(0, 5) || "",
-        end_time: endLocal?.split("T")[1]?.slice(0, 5) || "",
-      };
-      setFormData(newFormData);
+    const startLocal = currentData?.start?.local;
+    const endLocal = currentData?.end?.local;
+    const newFormData = {
+      name: currentData?.name?.text || "",
+      summary: currentData?.summary || "",
+      date: startLocal?.split("T")[0] || "",
+      start_time: startLocal?.split("T")[1]?.slice(0, 5) || "",
+      end_time: endLocal?.split("T")[1]?.slice(0, 5) || "",
+    };
+    setFormData(newFormData);
   }, [currentData]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -120,7 +122,7 @@ const Update = () => {
   const zodValidate = () => {
     const result = schema.safeParse(formData);
     if (result.success === false) {
-      const newErrors:Record<string, string> = {};
+      const newErrors: Record<string, string> = {};
       result.error.issues.forEach((e) => {
         newErrors[e.path[0] as string] = e.message;
       });
@@ -140,7 +142,7 @@ const Update = () => {
     const isValid: boolean = useLibrary ? zodValidate() : customValidate();
     if (!isValid) return;
     try {
-      const result = await fetch(`/api/v3/events/${id}/`, {
+      const result = await fetch(`https://www.eventbriteapi.com/v3/events/${id}/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${API_KEY}`,

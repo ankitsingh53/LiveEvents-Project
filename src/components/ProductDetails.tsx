@@ -33,7 +33,7 @@ const ProductDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/api/v3/events/${id}/`, {
+        const response = await fetch(`https://www.eventbriteapi.com/v3/events/${id}/`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${API_KEY}`,
@@ -63,7 +63,7 @@ const ProductDetails = () => {
   if (err) {
     return <h3>Error: {err}</h3>;
   }
-  if(!result) return;
+  if (!result) return;
   const eventDate = new Date(result.start.local);
   const date = eventDate.toLocaleDateString();
   const time = eventDate.toLocaleTimeString("en-IN");
