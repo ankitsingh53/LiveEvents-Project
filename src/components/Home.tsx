@@ -47,7 +47,7 @@ const Home = () => {
   const fetchEvent = async (): Promise<void> => {
     try {
       const result = await fetch(
-        "https://www.eventbriteapi.com/v3/organizations/3003835690035/events/",
+        'https://www.eventbriteapi.com/v3/organizations/3004242831212/events/',
         {
           method: "GET",
           headers: {
@@ -72,10 +72,9 @@ const Home = () => {
     }
   };
   useEffect(() => {
-    const load = async () => {
-      await fetchEvent();
-    };
-    load();
+    
+   fetchEvent();
+  
   }, []);
   const filterData: Event[] = eventData.filter((item) =>
     item.name.text.toLowerCase().includes(debounceSearch.trim().toLowerCase()),

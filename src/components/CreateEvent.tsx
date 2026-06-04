@@ -50,12 +50,55 @@ const CreateEvent = () => {
   });
   if (!context) return;
   const { fetchEvent } = context;
-
   const today = new Date().toISOString().split("T")[0];
+  const onChangeCheck = (data:GetFormData) => {
+    let newErrors: FormErrors = {}
+    if (data.summary.trim()) {
+      if (!data.name) {
+        newErrors.name = "This field is required";
+      }
+    }
+     if (data.date) {
+      if (!data.name.trim()) {
+        newErrors.name = "This field is required";
+      }
+      if (!data.summary.trim()) {
+        newErrors.summary = "This field is required";
+      }
+    } 
+     if (data.start_time) {
+      if (!data.name.trim()) {
+        newErrors.name = "This field is required";
+      }
+      if (!data.summary.trim()) {
+        newErrors.summary = "This field is required";
+      }
+      if (!data.date) {
+        newErrors.date = "This field is required";
+      }
+    }
+    if (data.end_time) {
+      if (!data.name.trim()) {
+        newErrors.name = "This field is required";
+      }
+      if (!data.summary.trim()) {
+        newErrors.summary = "This field is required";
+      }
+      if (!data.date) {
+        newErrors.date = "This field is required";
+      }
+      if (!data.start_time) {
+        newErrors.start_time = "This field is required";
+      }
+    }
+    setErrors(newErrors);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const updatedFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(updatedFormData);
     setErrors({ ...errors, [e.target.name]: "" });
+    onChangeCheck(updatedFormData);
   };
 
   const customValidate = () => {
@@ -112,7 +155,7 @@ const CreateEvent = () => {
     if (!isValid) return;
     try {
       const result = await fetch(
-        "https://www.eventbriteapi.com/v3/organizations/3003835690035/events/",
+        "https://www.eventbriteapi.com/v3/organizations/3004242831212/events/",
         {
           method: "POST",
           headers: {
@@ -199,6 +242,7 @@ const CreateEvent = () => {
             name="name"
             value={formData.name}
             onChange={handleChange}
+            required
           />
           {errors.name && <p style={{ color: "red" }}>{errors.name}</p>}
           <Typography variant="body1" gutterBottom>

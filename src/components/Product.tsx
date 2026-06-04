@@ -36,7 +36,7 @@ const Product = () => {
   };
   const handleDelete = async (id: number) => {
     try {
-      const result = await fetch(`https://www.eventbriteapi.com/v3/events/${id}/`, {
+      const result = await fetch(`/api/v3/events/${id}/`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${API_KEY}`,

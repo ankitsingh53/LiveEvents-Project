@@ -179,7 +179,6 @@ const Update = () => {
           end_time: "",
         });
       }
-      // const data = await result.json();
     } catch (error) {
       if (error instanceof Error) {
         setErr(error.message);
